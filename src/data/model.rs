@@ -6,7 +6,7 @@ pub struct Todo {
     pub id: u64,
     pub title: String,
     pub description: Option<String>,
-    pub status: Option<i8>,
+    pub status: i8,
     // ! It will be filled automatically.
     pub created_at: Option<NaiveDateTime>,
     // ! It will be filled automatically.
@@ -23,7 +23,7 @@ pub struct CreateTodo {
 }
 
 impl CreateTodo {
-    fn new(title: String, description: Option<String>, status: Option<i8>) -> Self {
+    pub fn new(title: String, description: Option<String>, status: Option<i8>) -> Self {
         Self {
             title,
             description,
@@ -37,11 +37,11 @@ pub struct UpdateTodo {
     pub id: u64,
     pub title: String,
     pub description: Option<String>,
-    pub status: Option<i8>,
+    pub status: i8,
 }
 
 impl UpdateTodo {
-    fn new(id: u64, title: String, description: Option<String>, status: Option<i8>) -> Self {
+    pub fn new(id: u64, title: String, description: Option<String>, status: i8) -> Self {
         Self {
             id,
             title,
