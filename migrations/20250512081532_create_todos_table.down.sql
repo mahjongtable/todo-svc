@@ -1,2 +1,2 @@
 -- Add down migration script here
-DROP TABLE IF NOT EXISTS `todos`;
+DROP TABLE IF EXISTS `todos`;
