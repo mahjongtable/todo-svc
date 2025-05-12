@@ -3,3 +3,5 @@ pub mod pb {
 }
 
 pub mod data;
+
+pub mod dto;

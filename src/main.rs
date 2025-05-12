@@ -4,6 +4,7 @@ use todo_svc::{
         model::{CreateTodo, UpdateTodo},
         repository::TodoRepository,
     },
+    dto::todo::TodoDto,
     pb::{
         CreateTodoRequest, CreateTodoResponse, DeleteTodoRequest, DeleteTodoResponse,
         GetTodoRequest, GetTodoResponse, UpdateTodoRequest, UpdateTodoResponse,
@@ -94,19 +95,35 @@ impl<R: TodoRepository> Todo for TodoService<R> {
             .map_err(|db_err| Status::internal(db_err.to_string()))?;
 
         match todo {
-            Some(todo) => Ok(Response::new(GetTodoResponse {
-                id: todo.id,
-                title: todo.title,
-                description: todo.description.unwrap_or_default(),
-                status: todo.status as i32,
-                // todo: convert to type 'Timestamp' type of proto3.
-                created_at: None,
-                // todo: convert to type 'Timestamp' type of proto3.
-                updated_at: None,
-            })),
+            Some(todo) => {
+                let dto: TodoDto = todo.into();
+                let resp: GetTodoResponseWrapper = dto.into();
+                Ok(Response::new(resp.origin_response()))
+            },
             None => Err(Status::not_found(
                 "The record may have been deleted or may not exist.",
             )),
         }
+    }
+}
+
+pub struct GetTodoResponseWrapper(pub GetTodoResponse);
+
+impl From<TodoDto> for GetTodoResponseWrapper {
+    fn from(value: TodoDto) -> Self {
+        Self(GetTodoResponse {
+            id: value.id,
+            title: value.title,
+            description: value.description.unwrap_or_default(),
+            status: value.status as i32,
+            created_at: None,
+            updated_at: None,
+        })
+    }
+}
+
+impl GetTodoResponseWrapper {
+    pub fn origin_response(self) -> GetTodoResponse {
+        self.0
     }
 }
