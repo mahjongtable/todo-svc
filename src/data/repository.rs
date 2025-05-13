@@ -8,4 +8,5 @@ pub trait TodoRepository: Sync + Send + 'static {
     async fn update_todo(&self, update_todo: UpdateTodo) -> Result<u64, Error>;
     async fn delete_todo(&self, id: u64) -> Result<Result<u64, &str>, Error>;
     async fn get_todo(&self, id: u64) -> Result<Option<Todo>, Error>;
+    async fn get_todo_list(&self, page: u32, size: u32) -> Result<(Vec<Todo>, u64), Error>;
 }

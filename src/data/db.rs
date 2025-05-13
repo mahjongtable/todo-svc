@@ -71,6 +71,39 @@ pub mod mysql {
 
             Ok(todo)
         }
+
+        async fn get_todo_list(&self, page: u32, size: u32) -> Result<(Vec<Todo>, u64), Error> {
+            let mut tx = self.pool.begin().await?;
+
+            let sql = "SELECT COUNT(`id`) FROM `todos`";
+            let total: i64 = sqlx::query_scalar(sql).fetch_one(&mut *tx).await?;
+
+            let todos: Vec<Todo> = sqlx::query_as!(
+                Todo,
+                r#"
+                SELECT
+                    `id`,
+                    `title`,
+                    `description`,
+                    `status`,
+                    `created_at`,
+                    `updated_at`,
+                    `deleted_at`
+                FROM `todos`
+                WHERE
+                    `deleted_at` IS NULL
+                LIMIT ? OFFSET ?
+                "#,
+                size,
+                (page - 1) * size
+            )
+            .fetch_all(&mut *tx)
+            .await?;
+
+            tx.commit().await?;
+
+            Ok((todos, total as u64))
+        }
     }
 }
 

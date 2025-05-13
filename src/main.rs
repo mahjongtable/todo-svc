@@ -4,10 +4,11 @@ use todo_svc::{
         model::{CreateTodo, UpdateTodo},
         repository::TodoRepository,
     },
-    dto::todo::TodoDto,
+    dto::todo::{TodoDto, TodoListDto},
     pb::{
         CreateTodoRequest, CreateTodoResponse, DeleteTodoRequest, DeleteTodoResponse,
-        GetTodoRequest, GetTodoResponse, UpdateTodoRequest, UpdateTodoResponse,
+        GetTodoListRequest, GetTodoListResponse, GetTodoRequest, GetTodoResponse, TodoItem,
+        UpdateTodoRequest, UpdateTodoResponse,
         todo_server::{Todo, TodoServer},
     },
 };
@@ -99,11 +100,44 @@ impl<R: TodoRepository> Todo for TodoService<R> {
                 let dto: TodoDto = todo.into();
                 let resp: GetTodoResponseWrapper = dto.into();
                 Ok(Response::new(resp.origin_response()))
-            },
+            }
             None => Err(Status::not_found(
                 "The record may have been deleted or may not exist.",
             )),
         }
+    }
+
+    async fn get_todo_list(
+        &self,
+        req: Request<GetTodoListRequest>,
+    ) -> Result<Response<GetTodoListResponse>, Status> {
+        let GetTodoListRequest { page, size } = req.into_inner();
+
+        self.repo
+            .get_todo_list(page as u32, size as u32)
+            .await
+            .and_then(|(todos, total)| {
+                let total_pages = ((total) / (size as u64)) as u32;
+
+                Ok(Response::new(GetTodoListResponse {
+                    todos: todos
+                        .into_iter()
+                        .map(|todo| TodoItem {
+                            id: todo.id,
+                            title: todo.title,
+                            description: todo.description.unwrap_or_default(),
+                            status: todo.status as i32,
+                            created_at: None,
+                            updated_at: None,
+                        })
+                        .collect(),
+                    previous_page: 0,
+                    next_page: 0,
+                    total: total as u64,
+                    total_pages: total_pages,
+                }))
+            })
+            .map_err(|err| Status::internal(err.to_string()))
     }
 }
 

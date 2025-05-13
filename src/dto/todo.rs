@@ -12,6 +12,14 @@ pub struct TodoDto {
     // pub deleted_at: Option<NaiveDateTime>,
 }
 
+pub struct TodoListDto {
+    pub todos: Vec<TodoDto>,
+    pub total: u64,
+    pub previous_page: u32,
+    pub next_page: u32,
+    pub total_pages: u32,
+}
+
 impl From<Todo> for TodoDto {
     fn from(
         Todo {
